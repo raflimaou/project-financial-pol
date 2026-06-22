@@ -736,7 +736,7 @@ const wallets=[
   {id:'all',label:'Semua',cls:'wc-all',icon:'ti-stack-2',bg:'#555',fg:'#fff',barClr:'#888'},
   {id:'tunai',label:'Tunai',cls:'wc-tunai',icon:'ti-cash',bg:'#2D2D2D',fg:'#fff',barClr:'#2D2D2D'},
   {id:'bca',label:'BCA',cls:'wc-bca',icon:'ti-building-bank',bg:'#003D82',fg:'#fff',barClr:'#003D82'},
-  {id:'mandiri',label:'Mandiri',cls:'wc-mandiri',icon:'ti-building-bank',bg:'#0E4C14',fg:'#fff',barClr:'#0E4C14'},
+  {id:'mandiri',label:'Mandiri',cls:'wc-mandiri',icon:'ti-building-bank',bg:'#E3A000',fg:'#fff',barClr:'#E3A000'},
   {id:'gopay',label:'GoPay',cls:'wc-gopay',icon:'ti-brand-google',bg:'#00AED6',fg:'#fff',barClr:'#00AED6'},
   {id:'shopee',label:'Shopee',cls:'wc-shopee',icon:'ti-shopping-bag',bg:'#EE4D2D',fg:'#fff',barClr:'#EE4D2D'},
   {id:'ovo',label:'OVO',cls:'wc-ovo',icon:'ti-discount-2',bg:'#4C3494',fg:'#fff',barClr:'#4C3494'},
@@ -929,14 +929,16 @@ function rWallet(){
   document.getElementById('walletChips').innerHTML=usedW.map(w=>`<div class="wchip ${w.cls}${selWallet===w.id?' sel':''}" onclick="selWallet='${w.id}';rWallet()">${w.label}</div>`).join('');
 
   // ── Summary cards ──
-  const sumW=wallets.filter(w=>w.id!=='all'&&st.expenses.some(e=>e.wallet===w.id));
-  const totAll=st.expenses.reduce((a,e)=>a+e.amount,0);
+  const insOut=(st.insidental||[]).filter(x=>x.type==='out');
+  const allExpForSum=[...st.expenses,...insOut];
+  const sumW=wallets.filter(w=>w.id!=='all'&&allExpForSum.some(e=>e.wallet===w.id));
+  const totAll=allExpForSum.reduce((a,e)=>a+e.amount,0);
   const se=document.getElementById('walletSummary');
   if(!sumW.length){se.innerHTML='<div style="grid-column:span 2"><div class="empty">Tambah pengeluaran dengan memilih metode pembayaran.</div></div>';}
   else{
     se.innerHTML=sumW.map(w=>{
-      const tot=st.expenses.filter(e=>e.wallet===w.id).reduce((a,e)=>a+e.amount,0);
-      const cnt=st.expenses.filter(e=>e.wallet===w.id).length;
+      const tot=allExpForSum.filter(e=>e.wallet===w.id).reduce((a,e)=>a+e.amount,0);
+      const cnt=allExpForSum.filter(e=>e.wallet===w.id).length;
       const bp=totAll>0?Math.round(tot/totAll*100):0;
       const incPct=inc>0?Math.round(tot/inc*100):0;
       return`<div class="ws-card" onclick="selWallet='${w.id}';rWallet()">
