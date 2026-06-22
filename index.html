@@ -809,7 +809,18 @@ function render(){
   document.getElementById('cP').textContent=fmt(tP);document.getElementById('cPP').textContent=pct(tP)+'% gaji';document.getElementById('bP').style.width=Math.min(100,pct(tP))+'%';
   document.getElementById('cS').textContent=fmt(tS);document.getElementById('cSP').textContent=pct(tS)+'% gaji';document.getElementById('bS').style.width=Math.min(100,pct(tS))+'%';
   const pos=Math.max(0,sisa);document.getElementById('cSi').textContent=fmt(pos);document.getElementById('cSiP').textContent=pct(pos)+'% gaji';document.getElementById('bSi').style.width=Math.min(100,pct(pos))+'%';
-  rAllDash();rScore(inc,tF+tFam+tIns,tP,tS,sisa);rAdv(inc,tF+tFam+tIns,tP,tS,sisa);rWallet();rAset();rInv();rPL();rIns();rRatio(inc,tF+tFam+tIns,tP,tS,sisa);rRule(inc,tF+tFam+tIns,tP,tS);rProj(st.savTarget||tS);rAllExp();
+  rAllDash();
+  try{rScore(inc,tF+tFam+tIns,tP,tS,sisa);}catch(e){}
+  try{rAdv(inc,tF+tFam+tIns,tP,tS,sisa);}catch(e){}
+  try{rWallet();}catch(e){}
+  try{rAset();}catch(e){}
+  try{rInv();}catch(e){}
+  try{rPL();}catch(e){}
+  try{rIns();}catch(e){}
+  try{rRatio(inc,tF+tFam+tIns,tP,tS,sisa);}catch(e){}
+  try{rRule(inc,tF+tFam+tIns,tP,tS);}catch(e){}
+  try{rProj(st.savTarget||tS);}catch(e){}
+  rAllExp();
 }
 
 function rAllDash(){
@@ -958,7 +969,17 @@ function rWallet(){
   }).join('');
 }
 
-function rAset(){const el=document.getElementById('asetList');const tot=st.assets.reduce((a,x)=>a+x.value,0);document.getElementById('totAset').textContent=fmt(tot);if(!st.assets.length){el.innerHTML='<div class="empty">Belum ada aset.</div>';return;}const icn={btc:'ti-currency-bitcoin',rdana:'ti-building-bank',saham:'ti-chart-candle',emas:'ti-diamond'};const lbl={btc:'Bitcoin',rdana:'Reksadana',saham:'Saham',emas:'Emas'};el.innerHTML=st.assets.map(a=>`<div class="arow"><div class="aico aico-${a.type}"><i class="ti ${icn[a.type]||'ti-coins'}"></i></div><div style="flex:1"><div class="aname">${a.name}</div><div class="asub">${lbl[a.type]||a.type}</div></div><div style="text-align:right"><div class="aval">${fmt(a.value)}</div><div class="${a.change>=0?'aup':'adn'}">${a.change>=0?'+':''}${a.change.toFixed(1)}%</div></div><button class="delbtn" onclick="delAset('${a.name}')">×</button></div>`).join('');}
+function rAset(){
+  const el=document.getElementById('asetList');
+  const totEl=document.getElementById('totAset');
+  const tot=st.assets.reduce((a,x)=>a+x.value,0);
+  if(totEl)totEl.textContent=fmt(tot);
+  if(!el)return;
+  if(!st.assets.length){el.innerHTML='<div class="empty">Belum ada aset.</div>';return;}
+  const icn={btc:'ti-currency-bitcoin',rdana:'ti-building-bank',saham:'ti-chart-candle',emas:'ti-diamond'};
+  const lbl={btc:'Bitcoin',rdana:'Reksadana',saham:'Saham',emas:'Emas'};
+  el.innerHTML=st.assets.map(a=>`<div class="arow"><div class="aico aico-${a.type}"><i class="ti ${icn[a.type]||'ti-coins'}"></i></div><div style="flex:1"><div class="aname">${a.name}</div><div class="asub">${lbl[a.type]||a.type}</div></div><div style="text-align:right"><div class="aval">${fmt(a.value)}</div><div class="${a.change>=0?'aup':'adn'}">${a.change>=0?'+':''}${a.change.toFixed(1)}%</div></div><button class="delbtn" onclick="delAset('${a.name}');event.stopPropagation()">×</button></div>`).join('');
+}
 
 function rRatio(inc,tF,tP,tS,sisa){const el=document.getElementById('ratioList');if(!inc){el.innerHTML='<div class="empty">Isi pemasukan di menu Atur.</div>';return;}const rows=[{name:'Rasio tabungan',val:Math.round(tS/inc*100),unit:'%',hint:'Ideal ≥ 20%',ok:v=>v>=20,warn:v=>v>=10},{name:'Rasio paylater',val:Math.round(tP/inc*100),unit:'%',hint:'Ideal < 15%',ok:v=>v===0,warn:v=>v<15},{name:'Pengeluaran tetap',val:Math.round(tF/inc*100),unit:'%',hint:'Ideal < 50%',ok:v=>v<50,warn:v=>v<65},{name:'Dana darurat',val:+(st.emergency/inc).toFixed(1),unit:'× gaji',hint:'Ideal ≥ 3× gaji',ok:v=>parseFloat(v)>=3,warn:v=>parseFloat(v)>=1}];el.innerHTML=rows.map(r=>{const g=r.ok(r.val),w=!g&&r.warn(r.val);const tg=g?'tgg':w?'tgy':'tgr',lb=g?'Baik':w?'Cukup':'Perhatian';return`<div class="ratio-row"><div style="display:flex;justify-content:space-between;align-items:center"><div><div class="rname">${r.name}</div><div class="rhint">${r.hint}</div></div><div style="text-align:right"><div style="font-size:14px;font-weight:600;color:#1A1A2E">${r.val}${r.unit}</div><span class="tag ${tg}">${lb}</span></div></div></div>`;}).join('');}
 
