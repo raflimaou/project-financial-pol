@@ -178,6 +178,36 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-siz
 .sisa-banner.neg .sisa-banner-lbl{color:#991B1B}
 .sisa-banner-val{font-size:18px;font-weight:700;color:#065F46;font-family:monospace}
 .sisa-banner.neg .sisa-banner-val{color:#991B1B}
+
+/* ── Dompet Sisa Bebas ── */
+.dsb-wrap{padding:12px 14px 0}
+.dsb-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.dsb-sisa{font-size:13px;font-weight:700;color:#0F172A}
+.dsb-sisa span{color:#10B981;font-family:monospace}
+.dsb-chip-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.dsb-chip{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:2px solid transparent;transition:all .15s;user-select:none;background:#F1F5F9;color:#475569}
+.dsb-chip.on{background:#0F172A;color:#fff;border-color:#0F172A}
+.dsb-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.dsb-card{background:#fff;border-radius:12px;padding:11px 12px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.dsb-card-top{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.dsb-card-ico{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px}
+.dsb-card-name{font-size:11px;font-weight:700;color:#0F172A}
+.dsb-card-amt{font-size:15px;font-weight:700;color:#EF4444;font-family:monospace}
+.dsb-card-sisa{font-size:10px;color:#94A3B8;margin-top:2px}
+.dsb-card-bar{height:3px;background:#F1F5F9;border-radius:2px;margin-top:7px;overflow:hidden}
+.dsb-card-bar-f{height:100%;border-radius:2px}
+.dsb-list-wrap{background:#fff;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);overflow:hidden}
+.dsb-list-empty{text-align:center;padding:20px;font-size:12px;color:#94A3B8}
+.dsb-add-btn{width:100%;padding:12px;border:none;border-radius:12px;background:#0F172A;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:6px}
+/* sheet */
+.sw-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;align-items:flex-end;justify-content:center}
+.sw-bg.open{display:flex}
+.sw-sheet{background:#fff;border-radius:20px 20px 0 0;padding:20px 18px 36px;width:100%;max-width:430px}
+.sw-sheet-title{font-size:15px;font-weight:700;color:#0F172A;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.sw-sheet-close{background:none;border:none;font-size:22px;color:#94A3B8;cursor:pointer;padding:0;line-height:1}
+.sw-saldo-box{background:#F1F5F9;border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.sw-saldo-lbl{font-size:11px;font-weight:600;color:#64748B}
+.sw-saldo-val{font-size:15px;font-weight:700;font-family:monospace;color:#10B981}
 </style>
 </head>
 <body>
@@ -272,10 +302,117 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-siz
     <div class="card" id="wPlan"><div class="empty"><i class="ti ti-wallet-off"></i>Isi pemasukan di menu Atur</div></div>
   </div>
   <div class="sec">
-    <div class="sec-title">Per dompet</div>
+    <div class="sec-title">Per dompet (pengeluaran rutin)</div>
     <div class="chip-row" id="wChips"></div>
     <div class="ws-grid" id="wSummary"></div>
     <div class="card" id="wDetail"><div class="empty"><i class="ti ti-hand-click"></i>Pilih dompet di atas</div></div>
+  </div>
+
+  <!-- ── DOMPET SISA BEBAS ── -->
+  <div class="dsb-wrap" style="padding-bottom:4px">
+    <div style="font-size:11px;font-weight:700;color:#64748B;letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px">Alokasi sisa bebas</div>
+    <div style="font-size:12px;color:#94A3B8;margin-bottom:10px">Sisa bebas bulan ini: <span id="dsbSisaVal" style="font-weight:700;color:#10B981;font-family:monospace">–</span></div>
+
+    <!-- 3 category cards -->
+    <div style="display:flex;flex-direction:column;gap:10px">
+
+      <!-- Kebutuhan ×0.5 -->
+      <div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+        <div style="background:#FEF2F2;padding:12px 14px;display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;border-radius:10px;background:#FEE2E2;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-home-2" style="font-size:17px;color:#EF4444"></i></div>
+          <div style="flex:1">
+            <div style="font-size:10px;font-weight:700;color:#991B1B">KEBUTUHAN HARIAN <span style="background:#FEE2E2;color:#991B1B;padding:1px 6px;border-radius:10px;margin-left:4px">×0,5</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px">
+              <div style="font-size:18px;font-weight:700;color:#EF4444;font-family:monospace" id="dsbSaldoK">–</div>
+              <div style="text-align:right"><div style="font-size:10px;color:#991B1B">Budget</div><div style="font-size:12px;font-weight:700;color:#991B1B;font-family:monospace" id="dsbBudgetK">–</div></div>
+            </div>
+            <div style="height:4px;background:#FEE2E2;border-radius:2px;margin-top:6px;overflow:hidden"><div id="dsbBarK" style="height:100%;border-radius:2px;background:#EF4444;width:0%;transition:width .5s"></div></div>
+          </div>
+        </div>
+        <div style="padding:8px 14px;border-bottom:.5px solid #FEF2F2">
+          <div class="dsb-chip-row" id="dsbChipsK" style="margin-bottom:0"></div>
+        </div>
+        <div id="dsbListK"><div class="dsb-list-empty">Belum ada catatan</div></div>
+        <div style="padding:10px 14px;border-top:.5px solid #F1F5F9">
+          <button onclick="openDsbSheet('K')" style="width:100%;padding:9px;background:#FEE2E2;color:#991B1B;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px"><i class="ti ti-plus" style="font-size:13px"></i> Catat makan, transport, dll</button>
+        </div>
+      </div>
+
+      <!-- Keinginan ×0.3 -->
+      <div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+        <div style="background:#FFFBEB;padding:12px 14px;display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;border-radius:10px;background:#FEF3C7;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-heart" style="font-size:17px;color:#F59E0B"></i></div>
+          <div style="flex:1">
+            <div style="font-size:10px;font-weight:700;color:#92400E">KEINGINAN & HIBURAN <span style="background:#FEF3C7;color:#92400E;padding:1px 6px;border-radius:10px;margin-left:4px">×0,3</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px">
+              <div style="font-size:18px;font-weight:700;color:#F59E0B;font-family:monospace" id="dsbSaldoW">–</div>
+              <div style="text-align:right"><div style="font-size:10px;color:#92400E">Budget</div><div style="font-size:12px;font-weight:700;color:#92400E;font-family:monospace" id="dsbBudgetW">–</div></div>
+            </div>
+            <div style="height:4px;background:#FEF3C7;border-radius:2px;margin-top:6px;overflow:hidden"><div id="dsbBarW" style="height:100%;border-radius:2px;background:#F59E0B;width:0%;transition:width .5s"></div></div>
+          </div>
+        </div>
+        <div style="padding:8px 14px;border-bottom:.5px solid #FFFBEB">
+          <div class="dsb-chip-row" id="dsbChipsW" style="margin-bottom:0"></div>
+        </div>
+        <div id="dsbListW"><div class="dsb-list-empty">Belum ada catatan</div></div>
+        <div style="padding:10px 14px;border-top:.5px solid #F1F5F9">
+          <button onclick="openDsbSheet('W')" style="width:100%;padding:9px;background:#FEF3C7;color:#92400E;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px"><i class="ti ti-plus" style="font-size:13px"></i> Catat date, ngopi, nonton, dll</button>
+        </div>
+      </div>
+
+      <!-- Tabungan ×0.2 -->
+      <div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+        <div style="background:#F0FDF4;padding:12px 14px;display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;border-radius:10px;background:#D1FAE5;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-piggy-bank" style="font-size:17px;color:#10B981"></i></div>
+          <div style="flex:1">
+            <div style="font-size:10px;font-weight:700;color:#065F46">TABUNGAN / INVESTASI <span style="background:#D1FAE5;color:#065F46;padding:1px 6px;border-radius:10px;margin-left:4px">×0,2</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px">
+              <div style="font-size:18px;font-weight:700;color:#10B981;font-family:monospace" id="dsbSaldoS">–</div>
+              <div style="text-align:right"><div style="font-size:10px;color:#065F46">Budget</div><div style="font-size:12px;font-weight:700;color:#065F46;font-family:monospace" id="dsbBudgetS">–</div></div>
+            </div>
+            <div style="height:4px;background:#D1FAE5;border-radius:2px;margin-top:6px;overflow:hidden"><div id="dsbBarS" style="height:100%;border-radius:2px;background:#10B981;width:0%;transition:width .5s"></div></div>
+          </div>
+        </div>
+        <div style="padding:8px 14px;border-bottom:.5px solid #F0FDF4">
+          <div class="dsb-chip-row" id="dsbChipsS" style="margin-bottom:0"></div>
+        </div>
+        <div id="dsbListS"><div class="dsb-list-empty">Belum ada catatan</div></div>
+        <div style="padding:10px 14px;border-top:.5px solid #F1F5F9">
+          <button onclick="openDsbSheet('S')" style="width:100%;padding:9px;background:#D1FAE5;color:#065F46;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px"><i class="ti ti-plus" style="font-size:13px"></i> Catat tabungan / transfer investasi</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Sheet tambah sisa bebas -->
+<div class="sw-bg" id="dsbSheet">
+  <div class="sw-sheet">
+    <div class="sw-sheet-title">
+      <span id="dsbSheetTitle">Catat pengeluaran</span>
+      <button class="sw-sheet-close" onclick="closeDsbSheet()">×</button>
+    </div>
+    <div class="sw-saldo-box">
+      <span class="sw-saldo-lbl" id="dsbSheetLbl">Sisa budget</span>
+      <span class="sw-saldo-val" id="dsbSheetSisa">–</span>
+    </div>
+    <div class="inp-g"><div class="inp-l">Keterangan</div><input id="dsbName" placeholder="cth: Makan siang, Nabung BCA"></div>
+    <div class="inp-g"><div class="inp-l">Jumlah (Rp)</div><input id="dsbAmt" type="text" inputmode="numeric" data-rp="1" placeholder="cth: 50.000"></div>
+    <div class="inp-g"><div class="inp-l">Dompet / bayar via</div>
+      <select id="dsbWallet">
+        <option value="tunai">Tunai / Tarik ATM</option>
+        <option value="mandiri">Mandiri</option>
+        <option value="bca">BCA</option>
+        <option value="gopay">GoPay</option>
+        <option value="shopee">Shopee / ShopeePay</option>
+        <option value="ovo">OVO</option>
+        <option value="dana">DANA</option>
+        <option value="other">Lainnya</option>
+      </select>
+    </div>
+    <div class="inp-g"><div class="inp-l">Tanggal</div><input id="dsbDate" type="date"></div>
+    <button class="btn btn-primary" onclick="addDsbEntry()">Simpan</button>
   </div>
 </div>
 
@@ -761,10 +898,162 @@ function rIns() {
   }).join('');
 }
 
+
+// ── DOMPET SISA BEBAS ─────────────────────────────────────
+let curDsbCat = 'K'; // K=kebutuhan W=keinginan S=tabungan
+
+const DSB_WALLETS = [
+  {id:'tunai',  label:'Tunai',  ico:'ti-cash',           bg:'#334155', bar:'#334155'},
+  {id:'mandiri',label:'Mandiri',ico:'ti-building-bank',  bg:'#166534', bar:'#166534'},
+  {id:'bca',    label:'BCA',    ico:'ti-building-bank',  bg:'#1D4ED8', bar:'#1D4ED8'},
+  {id:'gopay',  label:'GoPay',  ico:'ti-brand-google',   bg:'#0E7490', bar:'#0E7490'},
+  {id:'shopee', label:'Shopee', ico:'ti-shopping-bag',   bg:'#EA580C', bar:'#EA580C'},
+  {id:'ovo',    label:'OVO',    ico:'ti-discount-2',     bg:'#5B21B6', bar:'#5B21B6'},
+  {id:'dana',   label:'DANA',   ico:'ti-currency-dollar',bg:'#2563EB', bar:'#2563EB'},
+  {id:'other',  label:'Lainnya',ico:'ti-dots',           bg:'#64748B', bar:'#64748B'},
+];
+
+const DSB_CATS = {
+  K:{mult:0.5, label:'Kebutuhan', title:'Catat kebutuhan harian', hint:'Makan, transport, dll'},
+  W:{mult:0.3, label:'Keinginan', title:'Catat keinginan & hiburan', hint:'Date, ngopi, nonton, dll'},
+  S:{mult:0.2, label:'Tabungan',  title:'Catat tabungan / investasi', hint:'Transfer ke rekening tabungan'},
+};
+
+function getSisaBebas() {
+  const extraInc = (st.extraIncome||[]).reduce((a,x)=>a+x.amount,0);
+  const inc = st.income + extraInc;
+  const tF   = st.expenses.filter(e=>e.cat==='fixed').reduce((a,e)=>a+e.amount,0);
+  const tP   = st.expenses.filter(e=>e.cat==='paylater').reduce((a,e)=>a+e.amount,0);
+  const tFam = st.expenses.filter(e=>e.cat==='family').reduce((a,e)=>a+e.amount,0);
+  const tS   = st.expenses.filter(e=>e.cat==='saving').reduce((a,e)=>a+e.amount,0);
+  return Math.max(0, inc - (tF+tP+tFam+tS));
+}
+
+function rDsbWallet() {
+  if (!st.dsb) st.dsb = {K:[], W:[], S:[]};
+  if (!st.dsb.K) st.dsb = {K: st.dsb instanceof Array ? st.dsb : [], W:[], S:[]};
+  if (!st.dsb.K) st.dsb.K=[];
+  if (!st.dsb.W) st.dsb.W=[];
+  if (!st.dsb.S) st.dsb.S=[];
+
+  const sisa = getSisaBebas();
+  const el = document.getElementById('dsbSisaVal');
+  if (el) el.textContent = sisa > 0 ? fmt(sisa) : '–';
+
+  // Render each category
+  ['K','W','S'].forEach(cat => {
+    const budget = sisa * DSB_CATS[cat].mult;
+    const entries = st.dsb[cat] || [];
+    const spent = entries.reduce((a,e)=>a+e.amount,0);
+    const remaining = Math.max(0, budget - spent);
+    const usedPct = budget > 0 ? Math.min(100, Math.round(spent/budget*100)) : 0;
+
+    // Budget & saldo display
+    const budgetEl = document.getElementById('dsbBudget'+cat);
+    const saldoEl = document.getElementById('dsbSaldo'+cat);
+    const barEl = document.getElementById('dsbBar'+cat);
+    if (budgetEl) budgetEl.textContent = fmt(budget);
+    if (saldoEl) {
+      saldoEl.textContent = fmt(remaining);
+      saldoEl.style.opacity = remaining <= 0 ? '.5' : '1';
+    }
+    if (barEl) barEl.style.width = usedPct+'%';
+
+    // Wallet chips for this category
+    const chipsEl = document.getElementById('dsbChips'+cat);
+    if (chipsEl) {
+      const usedWIds = [...new Set(entries.map(e=>e.wallet||'tunai'))];
+      if (!usedWIds.length) { chipsEl.innerHTML = ''; }
+      else {
+        chipsEl.innerHTML = DSB_WALLETS.filter(w=>usedWIds.includes(w.id)).map(w =>
+          `<div class="dsb-chip on" style="background:${w.bg};color:#fff;border-color:${w.bg};font-size:11px;padding:4px 10px">`+
+          `<i class="ti ${w.ico}" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>${w.label}: ${fmt(entries.filter(e=>(e.wallet||'tunai')===w.id).reduce((a,e)=>a+e.amount,0))}</div>`
+        ).join('');
+      }
+    }
+
+    // List for this category
+    const listEl = document.getElementById('dsbList'+cat);
+    if (!listEl) return;
+    if (!entries.length) {
+      listEl.innerHTML = '<div class="dsb-list-empty">Belum ada catatan</div>';
+      return;
+    }
+    listEl.innerHTML = [...entries].reverse().map(e => {
+      const w = DSB_WALLETS.find(x=>x.id===(e.wallet||'tunai'));
+      const d = new Date(e.date);
+      const ds = d.getDate()+' '+MONTHS[d.getMonth()];
+      return `<div class="row" style="padding:9px 14px">
+        <div class="row-info">
+          <div class="row-name">${e.name}</div>
+          <div class="row-meta">
+            <span style="font-size:10px;padding:1px 7px;border-radius:10px;font-weight:600;background:${w?w.bg+'18':'#F1F5F9'};color:${w?w.bg:'#475569'}">${w?w.label:'Tunai'}</span>
+            <span style="font-size:10px;color:#94A3B8">${ds}</span>
+          </div>
+        </div>
+        <div class="row-right">
+          <span class="row-amt out">-${fmt(e.amount)}</span>
+          <button class="delbtn" onclick="delDsbEntry('${cat}',${e.id})">×</button>
+        </div>
+      </div>`;
+    }).join('');
+  });
+}
+
+function openDsbSheet(cat) {
+  curDsbCat = cat;
+  if (!st.dsb) st.dsb = {K:[],W:[],S:[]};
+  const sisa = getSisaBebas();
+  const budget = sisa * DSB_CATS[cat].mult;
+  const spent = (st.dsb[cat]||[]).reduce((a,e)=>a+e.amount,0);
+  const remaining = Math.max(0, budget - spent);
+  document.getElementById('dsbSheetTitle').textContent = DSB_CATS[cat].title;
+  document.getElementById('dsbSheetLbl').textContent = 'Sisa budget '+DSB_CATS[cat].label;
+  document.getElementById('dsbSheetSisa').textContent = fmt(remaining);
+  document.getElementById('dsbSheetSisa').style.color = remaining > 0 ? '#10B981' : '#EF4444';
+  document.getElementById('dsbName').value = '';
+  setRp('dsbAmt', 0);
+  document.getElementById('dsbDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('dsbSheet').classList.add('open');
+}
+
+function closeDsbSheet() {
+  document.getElementById('dsbSheet').classList.remove('open');
+}
+
+function addDsbEntry() {
+  const name = document.getElementById('dsbName').value.trim();
+  const amt = getRp('dsbAmt');
+  const wallet = document.getElementById('dsbWallet').value;
+  const date = document.getElementById('dsbDate').value || new Date().toISOString().slice(0,10);
+  if (!name || !amt) return;
+  if (!st.dsb) st.dsb = {K:[],W:[],S:[]};
+  if (!st.dsb[curDsbCat]) st.dsb[curDsbCat] = [];
+  st.dsb[curDsbCat].push({id: Date.now(), name, amount: amt, wallet, date});
+  sv();
+  rDsbWallet();
+  closeDsbSheet();
+  showToast('Tercatat!');
+}
+
+function delDsbEntry(cat, id) {
+  if (!st.dsb || !st.dsb[cat]) return;
+  const item = st.dsb[cat].find(e=>e.id===id);
+  if (!item) return;
+  st.dsb[cat] = st.dsb[cat].filter(e=>e.id!==id);
+  rDsbWallet();
+  showUndo('"'+item.name+'" dihapus',
+    ()=>{ st.dsb[cat].push(item); sv(); rDsbWallet(); },
+    ()=>{ sv(); }
+  );
+}
+
 // ── Init ──────────────────────────────────────────────────
 bindRp();
 loadSt();
 render();
+rDsbWallet();
+document.getElementById("dsbDate").value=new Date().toISOString().slice(0,10);
 
 </script>
 </body>
