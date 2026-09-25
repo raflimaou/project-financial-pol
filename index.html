@@ -453,6 +453,52 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-siz
     <div class="sec-title">Pengeluaran rutin terdaftar</div>
     <div class="card" id="allExp"><div class="empty">Belum ada</div></div>
   </div>
+
+  <!-- ── BACKUP & SINKRONISASI ── -->
+  <div class="sec" style="padding-bottom:20px">
+    <div class="sec-title">Backup & Sinkronisasi Data</div>
+    <div style="background:#F8FAFC;border-radius:14px;padding:14px;border:1px solid #E2E8F0">
+      <div style="font-size:12px;color:#64748B;margin-bottom:12px;line-height:1.6">
+        Data tersimpan di browser ini saja. Gunakan <b>Export</b> untuk menyimpan file backup, lalu <b>Import</b> di perangkat lain agar datanya sama.
+      </div>
+
+      <!-- Export -->
+      <div style="background:#fff;border-radius:10px;padding:12px;margin-bottom:8px;border:1px solid #E2E8F0">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;border-radius:10px;background:#DBEAFE;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="ti ti-cloud-download" style="font-size:17px;color:#2563EB"></i>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700;color:#1E293B">Export Data</div>
+            <div style="font-size:11px;color:#64748B">Download file backup ke HP/laptop</div>
+          </div>
+          <button onclick="exportData()" style="padding:8px 14px;background:#2563EB;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">
+            <i class="ti ti-download" style="font-size:12px"></i> Export
+          </button>
+        </div>
+      </div>
+
+      <!-- Import -->
+      <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid #E2E8F0">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;border-radius:10px;background:#D1FAE5;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="ti ti-cloud-upload" style="font-size:17px;color:#10B981"></i>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700;color:#1E293B">Import Data</div>
+            <div style="font-size:11px;color:#64748B">Restore dari file backup</div>
+          </div>
+          <label style="padding:8px 14px;background:#10B981;color:#fff;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">
+            <i class="ti ti-upload" style="font-size:12px"></i> Import
+            <input type="file" accept=".json" onchange="importData(event)" style="display:none">
+          </label>
+        </div>
+      </div>
+
+      <!-- Last backup info -->
+      <div style="margin-top:10px;text-align:center;font-size:11px;color:#94A3B8" id="lastBackupInfo"></div>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════ NAV ═══════════ -->
@@ -1048,12 +1094,80 @@ function delDsbEntry(cat, id) {
   );
 }
 
+// ── EXPORT / IMPORT ───────────────────────────────────────
+function exportData() {
+  const data = {
+    _app: 'finansialku',
+    _ver: 2,
+    _exported: new Date().toISOString(),
+    ...st
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const d = new Date();
+  const stamp = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  a.href = url;
+  a.download = 'finansialku-backup-'+stamp+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  // simpan timestamp backup terakhir
+  localStorage.setItem('fku_lastBackup', new Date().toISOString());
+  updateBackupInfo();
+  showToast('Data berhasil di-export!');
+}
+
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!data || data._app !== 'finansialku') {
+        showToast('File tidak valid!'); return;
+      }
+      // Konfirmasi sebelum overwrite
+      const konfirm = confirm(
+        'Import data dari file:\n"' + file.name + '"\n\n' +
+        'Data yang ada sekarang akan diganti.\nLanjutkan?'
+      );
+      if (!konfirm) { e.target.value=''; return; }
+      // Hapus meta keys, simpan sisanya
+      const {_app, _ver, _exported, ...rest} = data;
+      st = rest;
+      sv();
+      render();
+      rDsbWallet();
+      updateBackupInfo();
+      showToast('Data berhasil di-import!');
+    } catch(err) {
+      showToast('Gagal membaca file!');
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function updateBackupInfo() {
+  const el = document.getElementById('lastBackupInfo');
+  if (!el) return;
+  const ts = localStorage.getItem('fku_lastBackup');
+  if (!ts) { el.textContent = 'Belum pernah export'; return; }
+  const d = new Date(ts);
+  const days = Math.floor((Date.now()-d)/86400000);
+  const tgl = d.getDate()+' '+['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][d.getMonth()]+' '+d.getFullYear();
+  const jam = String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  el.textContent = 'Backup terakhir: '+tgl+' '+jam + (days===0?' (hari ini)':days===1?' (kemarin)':' ('+days+' hari lalu)')+' · Simpan file JSON ini jangan dihapus!';
+}
+
 // ── Init ──────────────────────────────────────────────────
 bindRp();
 loadSt();
 render();
 rDsbWallet();
 document.getElementById("dsbDate").value=new Date().toISOString().slice(0,10);
+updateBackupInfo();
 
 </script>
 </body>
