@@ -79,6 +79,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-siz
 .b-purple{background:#EDE9FE;color:#4C1D95}.b-gray{background:#F1F5F9;color:#475569}
 .delbtn{background:none;border:none;cursor:pointer;color:#CBD5E1;font-size:18px;padding:0;line-height:1;flex-shrink:0}
 .delbtn:hover{color:#EF4444}
+.pausebtn{background:none;border:none;cursor:pointer;color:#94A3B8;font-size:17px;padding:0;line-height:1;flex-shrink:0;display:flex;align-items:center}
+.pausebtn:hover{color:#6366F1}
+.row.paused .row-name{color:#94A3B8;text-decoration:line-through}
+.row.paused .row-amt{color:#CBD5E1 !important;text-decoration:line-through}
+.row.paused .badge{opacity:.55}
+.b-paused{background:#E2E8F0;color:#475569}
+.paused-hdr{display:flex;align-items:center;gap:6px;padding:9px 14px;background:#F8FAFC;border-top:.5px solid #E2E8F0;font-size:11px;font-weight:700;color:#64748B;letter-spacing:.3px;cursor:pointer;user-select:none}
+.paused-hdr .ph-sum{margin-left:auto;font-family:monospace;color:#94A3B8;font-weight:600}
 
 /* ── Empty state ── */
 .empty{text-align:center;padding:28px 16px;color:#94A3B8;font-size:12px}
@@ -642,6 +650,31 @@ function addExp() {
   showToast('Pengeluaran ditambahkan!');
 }
 
+// Pengeluaran aktif = yang tidak dijeda (dijeda tetap tersimpan tapi tidak dihitung)
+function actExp() { return st.expenses.filter(e => !e.paused); }
+
+function togglePause(id) {
+  const item = st.expenses.find(e => e.id === id);
+  if (!item) return;
+  item.paused = !item.paused;
+  sv(); render();
+  showToast(item.paused ? '"' + item.name + '" dijeda — tidak dihitung' : '"' + item.name + '" aktif lagi');
+}
+
+let showPausedDash = false, showPausedWallet = false;
+function pauseBtn(e) {
+  return `<button class="pausebtn" title="${e.paused?'Aktifkan lagi':'Jeda (tidak dihitung)'}" onclick="togglePause(${e.id})"><i class="ti ${e.paused?'ti-player-play':'ti-player-pause'}"></i></button>`;
+}
+function pausedSection(items, open, toggleVar, rowFn) {
+  if (!items.length) return '';
+  const tot = items.reduce((a,e)=>a+e.amount,0);
+  return `<div class="paused-hdr" onclick="${toggleVar}=!${toggleVar};render()">
+      <i class="ti ${open?'ti-chevron-down':'ti-chevron-right'}"></i>
+      <i class="ti ti-player-pause"></i> Dijeda (${items.length})
+      <span class="ph-sum">${fmt(tot)} tidak dihitung</span>
+    </div>` + (open ? items.map(rowFn).join('') : '');
+}
+
 function delExp(id) {
   const item = st.expenses.find(e => e.id === id);
   if (!item) return;
@@ -726,10 +759,10 @@ function getInsIcon(name) {
 function render() {
   const extraInc = (st.extraIncome||[]).reduce((a,x) => a+x.amount, 0);
   const inc = st.income + extraInc;
-  const tF   = st.expenses.filter(e=>e.cat==='fixed').reduce((a,e)=>a+e.amount,0);
-  const tP   = st.expenses.filter(e=>e.cat==='paylater').reduce((a,e)=>a+e.amount,0);
-  const tFam = st.expenses.filter(e=>e.cat==='family').reduce((a,e)=>a+e.amount,0);
-  const tS   = st.expenses.filter(e=>e.cat==='saving').reduce((a,e)=>a+e.amount,0);
+  const tF   = actExp().filter(e=>e.cat==='fixed').reduce((a,e)=>a+e.amount,0);
+  const tP   = actExp().filter(e=>e.cat==='paylater').reduce((a,e)=>a+e.amount,0);
+  const tFam = actExp().filter(e=>e.cat==='family').reduce((a,e)=>a+e.amount,0);
+  const tS   = actExp().filter(e=>e.cat==='saving').reduce((a,e)=>a+e.amount,0);
   const tIns = (st.insidental||[]).filter(x=>x.type==='out').reduce((a,x)=>a+x.amount,0);
   const tOut = tF + tP + tFam + tS + tIns;
   const sisa = inc - tOut;
@@ -763,18 +796,20 @@ function render() {
   rDashList();
   rWallet(inc);
   rAllExp();
+  if (typeof rDsbWallet === 'function') rDsbWallet();
 }
 
 function rDashList() {
   const el = document.getElementById('dashList');
   const ins = (st.insidental||[]).filter(x=>x.type==='out').map(x=>
     ({...x, cat:'insidental', isIns:true}));
-  const all = [...st.expenses, ...ins];
-  if (!all.length) {
+  const all = [...actExp(), ...ins];
+  const pausedList = st.expenses.filter(e => e.paused);
+  if (!all.length && !pausedList.length) {
     el.innerHTML = '<div class="empty"><i class="ti ti-receipt-off"></i>Belum ada pengeluaran</div>';
     return;
   }
-  el.innerHTML = all.map(e => {
+  const rowFn = e => {
     const catLabel = CAT_LABEL[e.cat] || e.cat;
     const badge = CAT_BADGE[e.cat] || 'b-gray';
     const amtCls = e.cat==='saving' ? 'sav' : 'out';
@@ -782,17 +817,20 @@ function rDashList() {
       ? `<button class="delbtn" onclick="delIns(${e.id})">×</button>`
       : `<button class="delbtn" onclick="delExp(${e.id})">×</button>`;
     const wp = !e.isIns ? wPill(e.wallet) : '';
-    return `<div class="row">
+    return `<div class="row${e.paused?' paused':''}">
       <div class="row-info">
         <div class="row-name">${e.name}</div>
-        <div class="row-meta"><span class="badge ${badge}">${catLabel}</span>${wp}</div>
+        <div class="row-meta"><span class="badge ${badge}">${catLabel}</span>${wp}${e.paused?'<span class="badge b-paused">Dijeda</span>':''}</div>
       </div>
       <div class="row-right">
         <span class="row-amt ${amtCls}">${fmt(e.amount)}</span>
+        ${!e.isIns ? pauseBtn(e) : ''}
         ${del}
       </div>
     </div>`;
-  }).join('');
+  };
+  el.innerHTML = (all.length ? all.map(rowFn).join('') : '<div class="empty" style="padding:14px">Semua pengeluaran sedang dijeda</div>')
+    + pausedSection(pausedList, showPausedDash, 'showPausedDash', rowFn);
 }
 
 function rAllExp() {
@@ -800,16 +838,18 @@ function rAllExp() {
   if (!st.expenses.length) {
     el.innerHTML = '<div class="empty">Belum ada</div>'; return;
   }
-  el.innerHTML = st.expenses.map(e => `<div class="row">
+  el.innerHTML = st.expenses.map(e => `<div class="row${e.paused?' paused':''}">
     <div class="row-info">
       <div class="row-name">${e.name}</div>
       <div class="row-meta">
         <span class="badge ${CAT_BADGE[e.cat]||'b-gray'}">${CAT_LABEL[e.cat]||e.cat}</span>
         ${wPill(e.wallet)}
+        ${e.paused?'<span class="badge b-paused">Dijeda</span>':''}
       </div>
     </div>
     <div class="row-right">
       <span class="row-amt ${CAT_COLOR[e.cat]||'out'}">${fmt(e.amount)}</span>
+      ${pauseBtn(e)}
       <button class="delbtn" onclick="delExp(${e.id})">×</button>
     </div>
   </div>`).join('');
@@ -823,7 +863,7 @@ function rWallet(incOverride) {
 
   // Plan
   const planEl = document.getElementById('wPlan');
-  const allOut = [...st.expenses,
+  const allOut = [...actExp(),
     ...(st.insidental||[]).filter(x=>x.type==='out').map(x=>({...x,cat:'insidental'}))]
   ;
   const byW = {};
@@ -869,14 +909,14 @@ function rWallet(incOverride) {
   ).join('');
 
   // Summary cards
-  const sumW = WALLETS.filter(w => w.id!=='all' && st.expenses.some(e=>e.wallet===w.id));
-  const totAll = st.expenses.reduce((a,e)=>a+e.amount,0);
+  const sumW = WALLETS.filter(w => w.id!=='all' && actExp().some(e=>e.wallet===w.id));
+  const totAll = actExp().reduce((a,e)=>a+e.amount,0);
   const se = document.getElementById('wSummary');
   if (!sumW.length) { se.innerHTML = ''; }
   else {
     se.innerHTML = sumW.map(w => {
-      const tot = st.expenses.filter(e=>e.wallet===w.id).reduce((a,e)=>a+e.amount,0);
-      const cnt = st.expenses.filter(e=>e.wallet===w.id).length;
+      const tot = actExp().filter(e=>e.wallet===w.id).reduce((a,e)=>a+e.amount,0);
+      const cnt = actExp().filter(e=>e.wallet===w.id).length;
       const bp = totAll>0 ? pct(tot,totAll) : 0;
       const ip = inc>0 ? pct(tot,inc) : 0;
       return `<div class="ws-card" onclick="selW='${w.id}';rWallet()">
@@ -890,26 +930,30 @@ function rWallet(incOverride) {
 
   // Detail
   const de = document.getElementById('wDetail');
-  const allForFilter = [...st.expenses,
+  const allForFilter = [...actExp(),
     ...(st.insidental||[]).filter(x=>x.type==='out').map(x=>
       ({...x,cat:'insidental',isIns:true}))];
   const filtered = selW==='all' ? allForFilter : allForFilter.filter(e=>e.wallet===selW);
-  if (!filtered.length) {
+  const pausedW = st.expenses.filter(e => e.paused && (selW==='all' || e.wallet===selW));
+  if (!filtered.length && !pausedW.length) {
     de.innerHTML = '<div class="empty"><i class="ti ti-hand-click"></i>Belum ada pengeluaran di sini</div>'; return;
   }
-  de.innerHTML = filtered.map(e => {
+  const rowFn = e => {
     const delFn = e.isIns ? `delIns(${e.id})` : `delExp(${e.id})`;
-    return `<div class="row">
+    return `<div class="row${e.paused?' paused':''}">
       <div class="row-info">
         <div class="row-name">${e.name}</div>
-        <div class="row-meta"><span class="badge ${CAT_BADGE[e.cat]||'b-gray'}">${CAT_LABEL[e.cat]||e.cat}</span></div>
+        <div class="row-meta"><span class="badge ${CAT_BADGE[e.cat]||'b-gray'}">${CAT_LABEL[e.cat]||e.cat}</span>${e.paused?'<span class="badge b-paused">Dijeda</span>':''}</div>
       </div>
       <div class="row-right">
         <span class="row-amt out">${fmt(e.amount)}</span>
+        ${!e.isIns ? pauseBtn(e) : ''}
         <button class="delbtn" onclick="${delFn}">×</button>
       </div>
     </div>`;
-  }).join('');
+  };
+  de.innerHTML = (filtered.length ? filtered.map(rowFn).join('') : '<div class="empty" style="padding:14px">Semua di dompet ini sedang dijeda</div>')
+    + pausedSection(pausedW, showPausedWallet, 'showPausedWallet', rowFn);
 }
 
 // ── Harian render ─────────────────────────────────────────
@@ -968,10 +1012,10 @@ const DSB_CATS = {
 function getSisaBebas() {
   const extraInc = (st.extraIncome||[]).reduce((a,x)=>a+x.amount,0);
   const inc = st.income + extraInc;
-  const tF   = st.expenses.filter(e=>e.cat==='fixed').reduce((a,e)=>a+e.amount,0);
-  const tP   = st.expenses.filter(e=>e.cat==='paylater').reduce((a,e)=>a+e.amount,0);
-  const tFam = st.expenses.filter(e=>e.cat==='family').reduce((a,e)=>a+e.amount,0);
-  const tS   = st.expenses.filter(e=>e.cat==='saving').reduce((a,e)=>a+e.amount,0);
+  const tF   = actExp().filter(e=>e.cat==='fixed').reduce((a,e)=>a+e.amount,0);
+  const tP   = actExp().filter(e=>e.cat==='paylater').reduce((a,e)=>a+e.amount,0);
+  const tFam = actExp().filter(e=>e.cat==='family').reduce((a,e)=>a+e.amount,0);
+  const tS   = actExp().filter(e=>e.cat==='saving').reduce((a,e)=>a+e.amount,0);
   return Math.max(0, inc - (tF+tP+tFam+tS));
 }
 
